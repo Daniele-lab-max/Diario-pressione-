@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pressione &amp; Battiti — Diario</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
     --fondo: #0f1720;
@@ -246,15 +247,138 @@
     .voce { grid-template-columns: 1fr; row-gap: 0.6rem; }
     .voce .quando { order: -1; }
   }
+
+  /* --- Login --- */
+  .schermo-login {
+    max-width: 380px;
+    margin: 4.5rem auto 0;
+    padding: 0 1.5rem;
+  }
+  .scheda-login {
+    background: linear-gradient(160deg, var(--pannello-alto), var(--pannello));
+    border: 1px solid var(--bordo);
+    border-radius: 20px;
+    padding: 1.8rem;
+    box-shadow: 0 20px 40px -24px rgba(0,0,0,0.5);
+  }
+  .scheda-login h1 {
+    font-size: 1.2rem;
+    margin: 0 0 0.3rem;
+  }
+  .scheda-login p.sottotitolo {
+    font-size: 0.82rem;
+    color: var(--testo-attenuato);
+    margin: 0 0 1.4rem;
+  }
+  .campo-login {
+    margin-bottom: 0.9rem;
+  }
+  .campo-login label {
+    display: block;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--testo-attenuato);
+    margin-bottom: 0.35rem;
+  }
+  .campo-login input {
+    width: 100%;
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    padding: 0.65rem 0.75rem;
+    border-radius: 10px;
+    border: 1px solid var(--bordo);
+    background: rgba(255,255,255,0.03);
+    color: var(--testo);
+  }
+  .campo-login input:focus {
+    outline: none;
+    border-color: var(--accento);
+  }
+  .riga-login-azioni {
+    display: flex;
+    gap: 0.7rem;
+    align-items: center;
+    margin-top: 1.2rem;
+    flex-wrap: wrap;
+  }
+  button.secondario {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 0.85rem;
+    background: transparent;
+    color: var(--testo-attenuato);
+    border: 1px solid var(--bordo);
+    padding: 0.7rem 1.1rem;
+    border-radius: 12px;
+    cursor: pointer;
+  }
+  button.secondario:hover { color: var(--testo); border-color: var(--testo-attenuato); }
+  #esito-login {
+    font-size: 0.8rem;
+    color: var(--rosso);
+    margin-top: 0.9rem;
+    min-height: 1.2em;
+  }
+  .barra-utente {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    color: var(--testo-attenuato);
+    margin-bottom: 1.4rem;
+    padding: 0.6rem 0.9rem;
+    background: var(--pannello);
+    border: 1px solid var(--bordo);
+    border-radius: 12px;
+  }
+  .barra-utente button {
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: none;
+    border: none;
+    color: var(--rosso);
+    cursor: pointer;
+    padding: 0.2rem 0.4rem;
+  }
+  .nascosto { display: none !important; }
 </style>
 </head>
 <body>
 
-<div class="foglio">
+<div class="schermo-login nascosto" id="schermo-login">
+  <div class="scheda-login">
+    <h1>Pressione &amp; Battiti</h1>
+    <p class="sottotitolo">Accedi per sincronizzare i tuoi dati su tutti i dispositivi.</p>
+
+    <div class="campo-login">
+      <label for="login-email">Email</label>
+      <input type="email" id="login-email" placeholder="tuo@esempio.it" autocomplete="email">
+    </div>
+    <div class="campo-login">
+      <label for="login-password">Password</label>
+      <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
+    </div>
+
+    <div class="riga-login-azioni">
+      <button class="principale" id="btn-accedi">Accedi</button>
+      <button class="secondario" id="btn-registrati">Crea account</button>
+    </div>
+    <div id="esito-login"></div>
+  </div>
+</div>
+
+<div class="foglio nascosto" id="app-principale">
   <header class="testata">
     <h1>Pressione &amp; Battiti</h1>
     <span class="data-oggi" id="data-oggi"></span>
   </header>
+
+  <div class="barra-utente">
+    <span id="email-utente"></span>
+    <button id="btn-esci">Esci</button>
+  </div>
 
   <section class="modulo">
     <div class="campi">
@@ -280,18 +404,50 @@
   <h2 class="sezione-titolo">Diario misurazioni <span class="conteggio" id="conteggio">0</span></h2>
   <div id="lista-voci"></div>
 
-  <footer class="piede">I dati restano salvati solo in questo browser.</footer>
+  <footer class="piede">I dati sono sincronizzati sul tuo account, su tutti i dispositivi.</footer>
 </div>
 
 <script>
 (function(){
-  const CHIAVE = 'diario_pressione_v1';
+  // --- Configurazione Supabase ---
+  const SUPABASE_URL = 'https://zkczoojbuxqkmxizrurx.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_-JYiyokA5eU8kbm5hZ2GUw_9r2uUpP8';
 
-  function carica(){
-    try { return JSON.parse(localStorage.getItem(CHIAVE)) || []; }
-    catch(e){ return []; }
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  let vociCache = [];
+
+  async function carica(){
+    const { data, error } = await sb
+      .from('misurazioni')
+      .select('*')
+      .order('quando', { ascending: false });
+    if (error){ console.error(error); return []; }
+    return data.map(r => ({
+      id: r.id,
+      quando: r.quando,
+      sistolica: r.sistolica,
+      diastolica: r.diastolica,
+      battiti: r.battiti
+    }));
   }
-  function salva(voci){ localStorage.setItem(CHIAVE, JSON.stringify(voci)); }
+
+  async function inserisci(voce){
+    const { error } = await sb.from('misurazioni').insert({
+      quando: voce.quando,
+      sistolica: voce.sistolica,
+      diastolica: voce.diastolica,
+      battiti: voce.battiti
+    });
+    if (error) console.error(error);
+    return !error;
+  }
+
+  async function elimina(id){
+    const { error } = await sb.from('misurazioni').delete().eq('id', id);
+    if (error) console.error(error);
+    return !error;
+  }
 
   function valutaPressione(sis, dia){
     if (sis < 90 || dia < 60) return {testo:'Bassa', classe:'attenzione'};
@@ -316,17 +472,17 @@
     return giorni[d.getDay()] + ' ' + d.getDate() + '/' + (d.getMonth()+1) + ', ' + ora;
   }
 
-  function disegna(){
-    const voci = carica();
+  async function disegna(){
+    vociCache = await carica();
     const lista = document.getElementById('lista-voci');
-    document.getElementById('conteggio').textContent = voci.length;
+    document.getElementById('conteggio').textContent = vociCache.length;
 
-    if (voci.length === 0){
+    if (vociCache.length === 0){
       lista.innerHTML = '<div class="vuoto">Nessuna misurazione ancora registrata.</div>';
       return;
     }
 
-    const ordinate = [...voci].sort((a,b) => new Date(b.quando) - new Date(a.quando));
+    const ordinate = vociCache;
 
     lista.innerHTML = ordinate.map(v => {
       const p = valutaPressione(v.sistolica, v.diastolica);
@@ -345,16 +501,16 @@
     }).join('');
 
     lista.querySelectorAll('button.elimina').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
         const id = btn.getAttribute('data-id');
-        const rimaste = carica().filter(v => String(v.id) !== id);
-        salva(rimaste);
+        btn.disabled = true;
+        await elimina(id);
         disegna();
       });
     });
   }
 
-  function registra(){
+  async function registra(){
     const sisEl = document.getElementById('sistolica');
     const diaEl = document.getElementById('diastolica');
     const bpmEl = document.getElementById('battiti');
@@ -373,9 +529,14 @@
       return;
     }
 
-    const voci = carica();
-    voci.push({ id: Date.now(), quando: new Date().toISOString(), sistolica: sis, diastolica: dia, battiti: bpm });
-    salva(voci);
+    document.getElementById('btn-salva').disabled = true;
+    const ok = await inserisci({ quando: new Date().toISOString(), sistolica: sis, diastolica: dia, battiti: bpm });
+    document.getElementById('btn-salva').disabled = false;
+
+    if (!ok){
+      esito.textContent = 'Errore nel salvataggio, riprova.';
+      return;
+    }
 
     esito.textContent = '';
     sisEl.value = ''; diaEl.value = ''; bpmEl.value = '';
@@ -390,7 +551,69 @@
 
   document.getElementById('data-oggi').textContent = new Date().toLocaleDateString('it-IT', {weekday:'long', day:'numeric', month:'long'});
 
-  disegna();
+  // --- Autenticazione ---
+  const schermoLogin = document.getElementById('schermo-login');
+  const appPrincipale = document.getElementById('app-principale');
+  const esitoLogin = document.getElementById('esito-login');
+
+  function mostraApp(sessione){
+    schermoLogin.classList.add('nascosto');
+    appPrincipale.classList.remove('nascosto');
+    document.getElementById('email-utente').textContent = sessione.user.email;
+    disegna();
+  }
+
+  function mostraLogin(){
+    appPrincipale.classList.add('nascosto');
+    schermoLogin.classList.remove('nascosto');
+  }
+
+  async function accedi(){
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    esitoLogin.textContent = '';
+    if (!email || !password){ esitoLogin.textContent = 'Inserisci email e password.'; return; }
+
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) esitoLogin.textContent = 'Credenziali non valide.';
+  }
+
+  async function registrati(){
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    esitoLogin.textContent = '';
+    if (!email || !password){ esitoLogin.textContent = 'Inserisci email e password.'; return; }
+    if (password.length < 6){ esitoLogin.textContent = 'La password deve avere almeno 6 caratteri.'; return; }
+
+    const { data, error } = await sb.auth.signUp({ email, password });
+    if (error){ esitoLogin.textContent = 'Impossibile creare l\'account: ' + error.message; return; }
+    if (data.session){
+      // Login automatico se la conferma email è disattivata
+    } else {
+      esitoLogin.textContent = 'Controlla la tua email per confermare l\'account.';
+    }
+  }
+
+  async function esci(){
+    await sb.auth.signOut();
+  }
+
+  document.getElementById('btn-accedi').addEventListener('click', accedi);
+  document.getElementById('btn-registrati').addEventListener('click', registrati);
+  document.getElementById('btn-esci').addEventListener('click', esci);
+  [document.getElementById('login-email'), document.getElementById('login-password')].forEach(el => {
+    el.addEventListener('keydown', e => { if (e.key === 'Enter') accedi(); });
+  });
+
+  sb.auth.onAuthStateChange((evento, sessione) => {
+    if (sessione) mostraApp(sessione);
+    else mostraLogin();
+  });
+
+  sb.auth.getSession().then(({ data }) => {
+    if (data.session) mostraApp(data.session);
+    else mostraLogin();
+  });
 })();
 </script>
 
