@@ -6,120 +6,111 @@
 <title>Pressione &amp; Battiti — Diario</title>
 <style>
   :root{
-    --carta: #f6f2ea;
-    --inchiostro: #26261f;
-    --linea: #d8d0bd;
-    --verde: #4c7a5a;
-    --verde-bg: #e7efe6;
-    --ambra: #b8842c;
-    --ambra-bg: #f7ecd8;
-    --rosso: #a4432f;
-    --rosso-bg: #f5e2dc;
-    --carta-scura: #efe9db;
-    --font-display: 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
-    --font-mono: 'SF Mono', 'Courier New', monospace;
+    --fondo: #0f1720;
+    --pannello: #161f2b;
+    --pannello-alto: #1c2734;
+    --bordo: #263242;
+    --testo: #eef2f6;
+    --testo-attenuato: #7c8a9c;
+    --accento: #5ee6b8;
+    --accento-scuro: #16332a;
+    --ambra: #f2b559;
+    --ambra-scuro: #382c14;
+    --rosso: #ff7a6b;
+    --rosso-scuro: #3a1917;
+    --font-display: 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+    --font-mono: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
   }
 
   * { box-sizing: border-box; }
 
   body {
     margin: 0;
-    background: var(--carta);
-    color: var(--inchiostro);
+    background:
+      radial-gradient(circle at 15% -10%, rgba(94,230,184,0.10), transparent 45%),
+      radial-gradient(circle at 100% 0%, rgba(94,138,230,0.08), transparent 40%),
+      var(--fondo);
+    color: var(--testo);
     font-family: var(--font-display);
     font-size: 16px;
     line-height: 1.5;
     padding: 0 0 4rem;
+    min-height: 100vh;
   }
 
   .foglio {
-    max-width: 720px;
+    max-width: 640px;
     margin: 0 auto;
-    padding: 2.5rem 1.5rem 0;
+    padding: 2.8rem 1.5rem 0;
   }
 
   header.testata {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: space-between;
-    border-bottom: 2px solid var(--inchiostro);
-    padding-bottom: 0.9rem;
-    margin-bottom: 1.8rem;
+    margin-bottom: 2rem;
   }
   header.testata h1 {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     margin: 0;
-    letter-spacing: 0.02em;
-    font-weight: 600;
+    letter-spacing: -0.01em;
+    font-weight: 700;
   }
   header.testata .data-oggi {
-    font-family: var(--font-mono);
     font-size: 0.8rem;
-    color: #6b6a5e;
-  }
-
-  /* --- ECG signature strip --- */
-  .ecg-strip {
-    width: 100%;
-    height: 46px;
-    margin-bottom: 1.8rem;
-    opacity: 0.85;
-  }
-  .ecg-strip path {
-    fill: none;
-    stroke: var(--verde);
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    stroke-dasharray: 620;
-    stroke-dashoffset: 620;
-    animation: traccia 2.4s ease-out forwards;
-  }
-  @keyframes traccia { to { stroke-dashoffset: 0; } }
-  @media (prefers-reduced-motion: reduce) {
-    .ecg-strip path { animation: none; stroke-dashoffset: 0; }
+    color: var(--testo-attenuato);
+    text-transform: capitalize;
   }
 
   section.modulo {
-    background: var(--carta-scura);
-    border: 1px solid var(--linea);
-    border-radius: 3px;
-    padding: 1.6rem;
-    margin-bottom: 2rem;
+    background: linear-gradient(160deg, var(--pannello-alto), var(--pannello));
+    border: 1px solid var(--bordo);
+    border-radius: 20px;
+    padding: 1.7rem;
+    margin-bottom: 2.2rem;
+    box-shadow: 0 20px 40px -24px rgba(0,0,0,0.5);
   }
 
   .campi {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
-    margin-bottom: 1.1rem;
+    gap: 0.9rem;
+    margin-bottom: 1.3rem;
+  }
+  .campo {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--bordo);
+    border-radius: 14px;
+    padding: 0.7rem 0.6rem;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .campo:focus-within {
+    border-color: var(--accento);
+    background: rgba(94,230,184,0.05);
   }
   .campo label {
     display: block;
-    font-size: 0.72rem;
+    font-size: 0.66rem;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: #6b6a5e;
-    margin-bottom: 0.35rem;
+    letter-spacing: 0.06em;
+    color: var(--testo-attenuato);
+    margin-bottom: 0.3rem;
   }
   .campo input {
     width: 100%;
     font-family: var(--font-mono);
-    font-size: 1.3rem;
-    padding: 0.5rem 0.4rem;
+    font-size: 1.35rem;
+    font-weight: 600;
+    padding: 0;
     border: none;
-    border-bottom: 2px solid var(--linea);
     background: transparent;
-    color: var(--inchiostro);
+    color: var(--testo);
   }
-  .campo input:focus {
-    outline: none;
-    border-bottom-color: var(--verde);
-  }
+  .campo input:focus { outline: none; }
+  .campo input::placeholder { color: #3d4a5a; }
   .campo span.unita {
-    font-size: 0.7rem;
-    color: #948f7c;
-    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    color: var(--testo-attenuato);
   }
 
   .riga-azioni {
@@ -132,121 +123,127 @@
   button.principale {
     font-family: var(--font-display);
     font-weight: 600;
-    font-size: 0.95rem;
-    background: var(--inchiostro);
-    color: var(--carta);
+    font-size: 0.92rem;
+    background: var(--accento);
+    color: #08251c;
     border: none;
-    padding: 0.65rem 1.3rem;
-    border-radius: 2px;
+    padding: 0.75rem 1.4rem;
+    border-radius: 12px;
     cursor: pointer;
-    transition: opacity 0.15s;
+    transition: transform 0.12s, box-shadow 0.12s;
+    box-shadow: 0 8px 20px -8px rgba(94,230,184,0.5);
   }
-  button.principale:hover { opacity: 0.85; }
+  button.principale:hover { transform: translateY(-1px); }
+  button.principale:active { transform: translateY(0); }
 
   #esito-form {
-    font-family: var(--font-mono);
-    font-size: 0.78rem;
+    font-size: 0.8rem;
     color: var(--rosso);
     min-height: 1.2em;
   }
 
   /* --- Voci diario --- */
   h2.sezione-titolo {
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: #6b6a5e;
-    margin: 0 0 0.8rem;
+    color: var(--testo-attenuato);
+    margin: 0 0 0.9rem;
     display: flex;
     justify-content: space-between;
     align-items: baseline;
   }
-  h2.sezione-titolo .conteggio { font-family: var(--font-mono); }
+  h2.sezione-titolo .conteggio {
+    font-family: var(--font-mono);
+    background: var(--pannello-alto);
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+    border: 1px solid var(--bordo);
+  }
 
   .voce {
     display: grid;
     grid-template-columns: auto 1fr auto auto;
     align-items: center;
     gap: 1rem;
-    padding: 0.85rem 0;
-    border-bottom: 1px solid var(--linea);
+    padding: 1rem 1.1rem;
+    background: var(--pannello);
+    border: 1px solid var(--bordo);
+    border-radius: 16px;
+    margin-bottom: 0.7rem;
   }
-  .voce:last-child { border-bottom: none; }
 
   .voce .quando {
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    color: #6b6a5e;
+    font-size: 0.72rem;
+    color: var(--testo-attenuato);
     white-space: nowrap;
   }
 
   .voce .valori {
     font-family: var(--font-mono);
-    font-size: 1.05rem;
+    font-size: 1.1rem;
+    font-weight: 600;
     display: flex;
-    gap: 1.1rem;
+    gap: 1.2rem;
   }
   .voce .valori .v small {
     display: block;
-    font-size: 0.6rem;
-    color: #948f7c;
+    font-size: 0.58rem;
+    font-weight: 400;
+    color: var(--testo-attenuato);
     text-transform: uppercase;
+    font-family: var(--font-display);
   }
 
   .etichetta {
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
+    font-size: 0.66rem;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    padding: 0.25rem 0.55rem;
+    letter-spacing: 0.03em;
+    padding: 0.3rem 0.65rem;
     border-radius: 999px;
     white-space: nowrap;
   }
-  .etichetta.normale { background: var(--verde-bg); color: var(--verde); }
-  .etichetta.attenzione { background: var(--ambra-bg); color: var(--ambra); }
-  .etichetta.critico { background: var(--rosso-bg); color: var(--rosso); }
+  .etichetta.normale { background: var(--accento-scuro); color: var(--accento); }
+  .etichetta.attenzione { background: var(--ambra-scuro); color: var(--ambra); }
+  .etichetta.critico { background: var(--rosso-scuro); color: var(--rosso); }
 
   .voce button.elimina {
     background: none;
     border: none;
-    color: #b0ab99;
+    color: #4a5768;
     font-size: 1.1rem;
     cursor: pointer;
     line-height: 1;
     padding: 0.2rem 0.4rem;
+    border-radius: 8px;
+    transition: color 0.15s, background 0.15s;
   }
-  .voce button.elimina:hover { color: var(--rosso); }
+  .voce button.elimina:hover { color: var(--rosso); background: var(--rosso-scuro); }
 
   .vuoto {
     text-align: center;
-    color: #948f7c;
+    color: var(--testo-attenuato);
     font-size: 0.9rem;
-    padding: 2.5rem 1rem;
-    font-style: italic;
+    padding: 2.8rem 1rem;
+    background: var(--pannello);
+    border: 1px dashed var(--bordo);
+    border-radius: 16px;
   }
-
-  .legenda {
-    margin-top: 2rem;
-    padding-top: 1.2rem;
-    border-top: 1px solid var(--linea);
-    font-size: 0.72rem;
-    color: #6b6a5e;
-    font-family: var(--font-mono);
-    line-height: 1.8;
-  }
-  .legenda strong { color: var(--inchiostro); }
 
   footer.piede {
     text-align: center;
-    font-size: 0.7rem;
-    color: #a49f8c;
-    margin-top: 3rem;
-    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--testo-attenuato);
+    opacity: 0.6;
+    margin-top: 2.5rem;
   }
 
   @media (max-width: 560px) {
-    .campi { grid-template-columns: 1fr; }
-    .voce { grid-template-columns: 1fr; row-gap: 0.5rem; }
+    .campi { grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; }
+    .campo { padding: 0.55rem 0.45rem; }
+    .campo input { font-size: 1.05rem; }
+    .voce { grid-template-columns: 1fr; row-gap: 0.6rem; }
     .voce .quando { order: -1; }
   }
 </style>
@@ -258,10 +255,6 @@
     <h1>Pressione &amp; Battiti</h1>
     <span class="data-oggi" id="data-oggi"></span>
   </header>
-
-  <svg class="ecg-strip" viewBox="0 0 700 46" preserveAspectRatio="none">
-    <path d="M0,23 L120,23 L135,8 L150,38 L165,23 L200,23 L215,10 L225,36 L235,23 L700,23"/>
-  </svg>
 
   <section class="modulo">
     <div class="campi">
@@ -286,13 +279,6 @@
 
   <h2 class="sezione-titolo">Diario misurazioni <span class="conteggio" id="conteggio">0</span></h2>
   <div id="lista-voci"></div>
-
-  <div class="legenda">
-    <strong>Criteri di valutazione</strong><br>
-    Pressione — Bassa: sistolica &lt;90 o diastolica &lt;60 · Normale: fino a 129/84 · Normale-alta: 130–139/85–89 · Alta: ≥140/90<br>
-    Battiti — Bassi: &lt;60 bpm · Normali: 60–100 bpm · Alti: &gt;100 bpm<br>
-    Questi valori sono indicativi (linee guida ESC/ESH) e non sostituiscono il parere del medico.
-  </div>
 
   <footer class="piede">I dati restano salvati solo in questo browser.</footer>
 </div>
