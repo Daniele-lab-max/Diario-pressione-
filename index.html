@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pressione &amp; Battiti — Diario</title>
+<style>
+  :root{
+    --carta: #f6f2ea;
+    --inchiostro: #26261f;
+    --linea: #d8d0bd;
+    --verde: #4c7a5a;
+    --verde-bg: #e7efe6;
+    --ambra: #b8842c;
+    --ambra-bg: #f7ecd8;
+    --rosso: #a4432f;
+    --rosso-bg: #f5e2dc;
+    --carta-scura: #efe9db;
+    --font-display: 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+    --font-mono: 'SF Mono', 'Courier New', monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--carta);
+    color: var(--inchiostro);
+    font-family: var(--font-display);
+    font-size: 16px;
+    line-height: 1.5;
+    padding: 0 0 4rem;
+  }
+
+  .foglio {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 0;
+  }
+
+  header.testata {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    border-bottom: 2px solid var(--inchiostro);
+    padding-bottom: 0.9rem;
+    margin-bottom: 1.8rem;
+  }
+  header.testata h1 {
+    font-size: 1.5rem;
+    margin: 0;
+    letter-spacing: 0.02em;
+    font-weight: 600;
+  }
+  header.testata .data-oggi {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: #6b6a5e;
+  }
+
+  /* --- ECG signature strip --- */
+  .ecg-strip {
+    width: 100%;
+    height: 46px;
+    margin-bottom: 1.8rem;
+    opacity: 0.85;
+  }
+  .ecg-strip path {
+    fill: none;
+    stroke: var(--verde);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 620;
+    stroke-dashoffset: 620;
+    animation: traccia 2.4s ease-out forwards;
+  }
+  @keyframes traccia { to { stroke-dashoffset: 0; } }
+  @media (prefers-reduced-motion: reduce) {
+    .ecg-strip path { animation: none; stroke-dashoffset: 0; }
+  }
+
+  section.modulo {
+    background: var(--carta-scura);
+    border: 1px solid var(--linea);
+    border-radius: 3px;
+    padding: 1.6rem;
+    margin-bottom: 2rem;
+  }
+
+  .campi {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.1rem;
+  }
+  .campo label {
+    display: block;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #6b6a5e;
+    margin-bottom: 0.35rem;
+  }
+  .campo input {
+    width: 100%;
+    font-family: var(--font-mono);
+    font-size: 1.3rem;
+    padding: 0.5rem 0.4rem;
+    border: none;
+    border-bottom: 2px solid var(--linea);
+    background: transparent;
+    color: var(--inchiostro);
+  }
+  .campo input:focus {
+    outline: none;
+    border-bottom-color: var(--verde);
+  }
+  .campo span.unita {
+    font-size: 0.7rem;
+    color: #948f7c;
+    font-family: var(--font-mono);
+  }
+
+  .riga-azioni {
+    display: flex;
+    gap: 0.7rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  button.principale {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 0.95rem;
+    background: var(--inchiostro);
+    color: var(--carta);
+    border: none;
+    padding: 0.65rem 1.3rem;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  button.principale:hover { opacity: 0.85; }
+
+  #esito-form {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--rosso);
+    min-height: 1.2em;
+  }
+
+  /* --- Voci diario --- */
+  h2.sezione-titolo {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #6b6a5e;
+    margin: 0 0 0.8rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  h2.sezione-titolo .conteggio { font-family: var(--font-mono); }
+
+  .voce {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.85rem 0;
+    border-bottom: 1px solid var(--linea);
+  }
+  .voce:last-child { border-bottom: none; }
+
+  .voce .quando {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: #6b6a5e;
+    white-space: nowrap;
+  }
+
+  .voce .valori {
+    font-family: var(--font-mono);
+    font-size: 1.05rem;
+    display: flex;
+    gap: 1.1rem;
+  }
+  .voce .valori .v small {
+    display: block;
+    font-size: 0.6rem;
+    color: #948f7c;
+    text-transform: uppercase;
+  }
+
+  .etichetta {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.25rem 0.55rem;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .etichetta.normale { background: var(--verde-bg); color: var(--verde); }
+  .etichetta.attenzione { background: var(--ambra-bg); color: var(--ambra); }
+  .etichetta.critico { background: var(--rosso-bg); color: var(--rosso); }
+
+  .voce button.elimina {
+    background: none;
+    border: none;
+    color: #b0ab99;
+    font-size: 1.1rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0.2rem 0.4rem;
+  }
+  .voce button.elimina:hover { color: var(--rosso); }
+
+  .vuoto {
+    text-align: center;
+    color: #948f7c;
+    font-size: 0.9rem;
+    padding: 2.5rem 1rem;
+    font-style: italic;
+  }
+
+  .legenda {
+    margin-top: 2rem;
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--linea);
+    font-size: 0.72rem;
+    color: #6b6a5e;
+    font-family: var(--font-mono);
+    line-height: 1.8;
+  }
+  .legenda strong { color: var(--inchiostro); }
+
+  footer.piede {
+    text-align: center;
+    font-size: 0.7rem;
+    color: #a49f8c;
+    margin-top: 3rem;
+    font-family: var(--font-mono);
+  }
+
+  @media (max-width: 560px) {
+    .campi { grid-template-columns: 1fr; }
+    .voce { grid-template-columns: 1fr; row-gap: 0.5rem; }
+    .voce .quando { order: -1; }
+  }
+</style>
+</head>
+<body>
+
+<div class="foglio">
+  <header class="testata">
+    <h1>Pressione &amp; Battiti</h1>
+    <span class="data-oggi" id="data-oggi"></span>
+  </header>
+
+  <svg class="ecg-strip" viewBox="0 0 700 46" preserveAspectRatio="none">
+    <path d="M0,23 L120,23 L135,8 L150,38 L165,23 L200,23 L215,10 L225,36 L235,23 L700,23"/>
+  </svg>
+
+  <section class="modulo">
+    <div class="campi">
+      <div class="campo">
+        <label for="sistolica">Sistolica <span class="unita">mmHg</span></label>
+        <input type="number" id="sistolica" placeholder="120" inputmode="numeric">
+      </div>
+      <div class="campo">
+        <label for="diastolica">Diastolica <span class="unita">mmHg</span></label>
+        <input type="number" id="diastolica" placeholder="80" inputmode="numeric">
+      </div>
+      <div class="campo">
+        <label for="battiti">Battiti <span class="unita">bpm</span></label>
+        <input type="number" id="battiti" placeholder="70" inputmode="numeric">
+      </div>
+    </div>
+    <div class="riga-azioni">
+      <button class="principale" id="btn-salva">Registra misurazione</button>
+      <span id="esito-form"></span>
+    </div>
+  </section>
+
+  <h2 class="sezione-titolo">Diario misurazioni <span class="conteggio" id="conteggio">0</span></h2>
+  <div id="lista-voci"></div>
+
+  <div class="legenda">
+    <strong>Criteri di valutazione</strong><br>
+    Pressione — Bassa: sistolica &lt;90 o diastolica &lt;60 · Normale: fino a 129/84 · Normale-alta: 130–139/85–89 · Alta: ≥140/90<br>
+    Battiti — Bassi: &lt;60 bpm · Normali: 60–100 bpm · Alti: &gt;100 bpm<br>
+    Questi valori sono indicativi (linee guida ESC/ESH) e non sostituiscono il parere del medico.
+  </div>
+
+  <footer class="piede">I dati restano salvati solo in questo browser.</footer>
+</div>
+
+<script>
+(function(){
+  const CHIAVE = 'diario_pressione_v1';
+
+  function carica(){
+    try { return JSON.parse(localStorage.getItem(CHIAVE)) || []; }
+    catch(e){ return []; }
+  }
+  function salva(voci){ localStorage.setItem(CHIAVE, JSON.stringify(voci)); }
+
+  function valutaPressione(sis, dia){
+    if (sis < 90 || dia < 60) return {testo:'Bassa', classe:'attenzione'};
+    if (sis >= 140 || dia >= 90) return {testo:'Alta', classe:'critico'};
+    if (sis >= 130 || dia >= 85) return {testo:'Normale-alta', classe:'attenzione'};
+    return {testo:'Normale', classe:'normale'};
+  }
+
+  function valutaBattiti(bpm){
+    if (bpm < 60) return {testo:'Bassi', classe:'attenzione'};
+    if (bpm > 100) return {testo:'Alti', classe:'critico'};
+    return {testo:'Normali', classe:'normale'};
+  }
+
+  function formattaData(iso){
+    const d = new Date(iso);
+    const oggi = new Date();
+    const giorni = ['dom','lun','mar','mer','gio','ven','sab'];
+    const stessGiorno = d.toDateString() === oggi.toDateString();
+    const ora = d.toLocaleTimeString('it-IT', {hour:'2-digit', minute:'2-digit'});
+    if (stessGiorno) return 'Oggi, ' + ora;
+    return giorni[d.getDay()] + ' ' + d.getDate() + '/' + (d.getMonth()+1) + ', ' + ora;
+  }
+
+  function disegna(){
+    const voci = carica();
+    const lista = document.getElementById('lista-voci');
+    document.getElementById('conteggio').textContent = voci.length;
+
+    if (voci.length === 0){
+      lista.innerHTML = '<div class="vuoto">Nessuna misurazione ancora registrata.</div>';
+      return;
+    }
+
+    const ordinate = [...voci].sort((a,b) => new Date(b.quando) - new Date(a.quando));
+
+    lista.innerHTML = ordinate.map(v => {
+      const p = valutaPressione(v.sistolica, v.diastolica);
+      const b = valutaBattiti(v.battiti);
+      return `
+        <div class="voce" data-id="${v.id}">
+          <span class="quando">${formattaData(v.quando)}</span>
+          <span class="valori">
+            <span class="v">${v.sistolica}/${v.diastolica}<small>mmHg</small></span>
+            <span class="v">${v.battiti}<small>bpm</small></span>
+          </span>
+          <span class="etichetta ${p.classe}">${p.testo}</span>
+          <button class="elimina" title="Elimina" data-id="${v.id}">✕</button>
+        </div>
+      `;
+    }).join('');
+
+    lista.querySelectorAll('button.elimina').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-id');
+        const rimaste = carica().filter(v => String(v.id) !== id);
+        salva(rimaste);
+        disegna();
+      });
+    });
+  }
+
+  function registra(){
+    const sisEl = document.getElementById('sistolica');
+    const diaEl = document.getElementById('diastolica');
+    const bpmEl = document.getElementById('battiti');
+    const esito = document.getElementById('esito-form');
+
+    const sis = parseInt(sisEl.value, 10);
+    const dia = parseInt(diaEl.value, 10);
+    const bpm = parseInt(bpmEl.value, 10);
+
+    if (!sis || !dia || !bpm){
+      esito.textContent = 'Compila tutti e tre i valori.';
+      return;
+    }
+    if (sis < 40 || sis > 300 || dia < 20 || dia > 200 || bpm < 20 || bpm > 250){
+      esito.textContent = 'Controlla i valori inseriti, sembrano fuori scala.';
+      return;
+    }
+
+    const voci = carica();
+    voci.push({ id: Date.now(), quando: new Date().toISOString(), sistolica: sis, diastolica: dia, battiti: bpm });
+    salva(voci);
+
+    esito.textContent = '';
+    sisEl.value = ''; diaEl.value = ''; bpmEl.value = '';
+    sisEl.focus();
+    disegna();
+  }
+
+  document.getElementById('btn-salva').addEventListener('click', registra);
+  [document.getElementById('sistolica'), document.getElementById('diastolica'), document.getElementById('battiti')].forEach(el => {
+    el.addEventListener('keydown', e => { if (e.key === 'Enter') registra(); });
+  });
+
+  document.getElementById('data-oggi').textContent = new Date().toLocaleDateString('it-IT', {weekday:'long', day:'numeric', month:'long'});
+
+  disegna();
+})();
+</script>
+
+</body>
+</html>
