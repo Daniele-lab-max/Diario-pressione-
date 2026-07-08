@@ -89,6 +89,14 @@
     border-color: var(--accento);
     background: rgba(94,230,184,0.05);
   }
+  .campo-quando {
+    margin-bottom: 0.9rem;
+  }
+  .campo-quando input[type="datetime-local"] {
+    font-family: var(--font-mono);
+    font-size: 0.95rem;
+    color-scheme: dark;
+  }
   .campo label {
     display: block;
     font-size: 0.66rem;
@@ -381,6 +389,10 @@
   </div>
 
   <section class="modulo">
+    <div class="campo campo-quando">
+      <label for="quando-misurazione">Data e ora</label>
+      <input type="datetime-local" id="quando-misurazione">
+    </div>
     <div class="campi">
       <div class="campo">
         <label for="sistolica">Sistolica <span class="unita">mmHg</span></label>
@@ -514,6 +526,7 @@
     const sisEl = document.getElementById('sistolica');
     const diaEl = document.getElementById('diastolica');
     const bpmEl = document.getElementById('battiti');
+    const quandoEl = document.getElementById('quando-misurazione');
     const esito = document.getElementById('esito-form');
 
     const sis = parseInt(sisEl.value, 10);
@@ -528,9 +541,15 @@
       esito.textContent = 'Controlla i valori inseriti, sembrano fuori scala.';
       return;
     }
+    if (!quandoEl.value){
+      esito.textContent = 'Seleziona data e ora della misurazione.';
+      return;
+    }
+
+    const quandoISO = new Date(quandoEl.value).toISOString();
 
     document.getElementById('btn-salva').disabled = true;
-    const ok = await inserisci({ quando: new Date().toISOString(), sistolica: sis, diastolica: dia, battiti: bpm });
+    const ok = await inserisci({ quando: quandoISO, sistolica: sis, diastolica: dia, battiti: bpm });
     document.getElementById('btn-salva').disabled = false;
 
     if (!ok){
@@ -540,6 +559,7 @@
 
     esito.textContent = '';
     sisEl.value = ''; diaEl.value = ''; bpmEl.value = '';
+    impostaOraAttuale();
     sisEl.focus();
     disegna();
   }
@@ -548,6 +568,13 @@
   [document.getElementById('sistolica'), document.getElementById('diastolica'), document.getElementById('battiti')].forEach(el => {
     el.addEventListener('keydown', e => { if (e.key === 'Enter') registra(); });
   });
+
+  function impostaOraAttuale(){
+    const ora = new Date();
+    ora.setMinutes(ora.getMinutes() - ora.getTimezoneOffset());
+    document.getElementById('quando-misurazione').value = ora.toISOString().slice(0, 16);
+  }
+  impostaOraAttuale();
 
   document.getElementById('data-oggi').textContent = new Date().toLocaleDateString('it-IT', {weekday:'long', day:'numeric', month:'long'});
 
